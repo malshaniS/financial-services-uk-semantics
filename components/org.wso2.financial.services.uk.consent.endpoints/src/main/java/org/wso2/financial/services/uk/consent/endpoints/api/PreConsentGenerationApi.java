@@ -43,6 +43,7 @@ import java.io.IOException;
 public class PreConsentGenerationApi {
 
     @POST
+    @Path("/{s:.*}")
     @Consumes({ "application/json" })
     @Produces({ "application/json" })
     @ApiOperation(value = "handle pre-consent generation validations", notes = "", response = InlineResponse200.class, authorizations = {
@@ -59,29 +60,17 @@ public class PreConsentGenerationApi {
     public Response preConsentGenerationPost(@Context HttpServletRequest request, @Context HttpServletResponse response) throws IOException {
 
         // Read the request body
-        BufferedReader reader = request.getReader();
-        StringBuilder requestBody = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            requestBody.append(line);
-        }
 
-        // Convert the request body to JSONObject
-        JSONParser parser = new JSONParser(JSONParser.MODE_JSON_SIMPLE);
-        JSONObject jsonObject = null;
-        try {
-            jsonObject = (JSONObject) parser.parse(requestBody.toString());
-        } catch (ParseException e) {
-            e.printStackTrace();
-            return Response.status(Response.Status.BAD_REQUEST).entity("Invalid JSON format").build();
-        }
+        JSONObject jsonObject = CommonConsentValidationUtil.getPayload(request);
 
         String requestPath = request.getRequestURI();
         JSONObject validationResponse = null;
         if(requestPath != null){
+            //Accounts Consent Validations
             if (requestPath.contains(CommonConstants.ACCOUNT_CONSENT_PATH)){
                 validationResponse = AccountsConsentValidationUtil.validateAccountsConsentRequest(jsonObject);
             }
+            //Payments Consent Validations
             else if (requestPath.contains(CommonConstants.DOMESTIC_CONSENT_PATH) ||
                     requestPath.contains(CommonConstants.DOMESTIC_SCHEDULED_CONSENT_PATH) ||
                     requestPath.contains(CommonConstants.DOMESTIC_STANDING_ORDER_CONSENT_PATH) ||
@@ -94,7 +83,7 @@ public class PreConsentGenerationApi {
         }
 
         // Check if validationResponse contains an error message
-        if (validationResponse != null && validationResponse.containsKey("error")) {
+        if (validationResponse != null && validationResponse.containsKey("errors")) {
             return Response.status(Response.Status.BAD_REQUEST).entity(validationResponse).build();
         }
 

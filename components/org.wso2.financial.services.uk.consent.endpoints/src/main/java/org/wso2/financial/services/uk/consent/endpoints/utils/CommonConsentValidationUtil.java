@@ -46,8 +46,6 @@ public class CommonConsentValidationUtil {
     public static JSONObject getValidationResponse(String errorCode, String errorMessage, String errorPath) {
         JSONObject validationResponse = new JSONObject();
 
-        validationResponse.put(CommonConstants.IS_VALID, false);
-        validationResponse.put(CommonConstants.HTTP_CODE, ErrorConstants.HTTP_BAD_REQUEST);
         validationResponse.put(CommonConstants.ERRORS, ErrorUtil
                 .constructUKError(ErrorConstants.BAD_REQUEST_CODE, ErrorConstants.INVALID_REQ_PAYLOAD,
                         errorCode, errorMessage, errorPath));
@@ -76,7 +74,7 @@ public class CommonConsentValidationUtil {
      * is and error scenario. Error is returned instead of throwing since the error response should be handled by the
      * toolkit is the manage scenario.
      */
-    public static Object getPayload(HttpServletRequest request) {
+    public static JSONObject getPayload(HttpServletRequest request) {
         try {
             Object payload = new JSONParser(JSONParser.MODE_PERMISSIVE).parse(getStringPayload(request));
             if (payload == null) {
@@ -88,7 +86,7 @@ public class CommonConsentValidationUtil {
                 log.error("Payload is not a JSON. Returning null");
                 return null;
             }
-            return payload;
+            return (JSONObject) payload;
         } catch (ParseException e) {
             //Not throwing error since error should be formatted by manage toolkit
             log.error(ErrorConstants.ERROR_PAYLOAD_PARSE + ". Returning null", e);

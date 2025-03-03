@@ -26,14 +26,10 @@
          http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd">
     <jaxrs:server id="consent" address="/">
         <jaxrs:serviceBeans>
-            <bean class="com.wso2.openbanking.accelerator.consent.endpoint.api.ConsentAuthorizeEndpoint"/>
-            <bean class="com.wso2.openbanking.accelerator.consent.endpoint.api.ConsentManageEndpoint"/>
-            <bean class="com.wso2.openbanking.accelerator.consent.endpoint.api.ConsentAdminEndpoint"/>
-            <bean class="com.wso2.openbanking.accelerator.consent.endpoint.api.ConsentValidationEndpoint"/>
+            <bean class="org.wso2.financial.services.uk.consent.endpoints.api.PreConsentGenerationApi"/>
         </jaxrs:serviceBeans>
         <jaxrs:providers>
             <bean class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider"/>
-            <bean class="com.wso2.openbanking.accelerator.consent.endpoint.error.ConsentThrowableMapper"/>
         </jaxrs:providers>
     </jaxrs:server>
 </beans>
