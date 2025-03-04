@@ -53,7 +53,7 @@ public class CommonConsentValidationUtil {
 
     /**
      * Method to construct the consent manage success response.
-     * @param requestBody
+     * @param eventId
      * @return
      */
     public static SuccessResponse getSuccessResponse(String eventId) {
