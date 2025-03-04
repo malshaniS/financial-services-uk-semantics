@@ -1,25 +1,23 @@
-package org.wso2.financial.services.uk.consent.endpoints.utils;
+package org.wso2.financial.services.uk.consent.endpoints.model;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.annotation.JsonValue;
 import io.swagger.annotations.ApiModelProperty;
-
-import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
+import javax.validation.Valid;
+
 import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
-
-
-@JsonTypeName("inline_response_200")
+@JsonTypeName("SuccessResponse")
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2025-03-01T12:33:30.949099+05:30[Asia/Colombo]", comments = "Generator version: 7.11.0")
-public class InlineResponse200   {
+public class SuccessResponse   {
   private String eventId;
   public enum ActionStatusEnum {
 
-    FAILED(String.valueOf("FAILED"));
+    SUCCESS(String.valueOf("SUCCESS"));
 
 
     private String value;
@@ -66,15 +64,13 @@ public class InlineResponse200   {
 
   private ActionStatusEnum actionStatus;
   private @Valid List<Object> operations = new ArrayList<>();
-  private String failureReason;
-  private String failureDescription;
 
-  public InlineResponse200() {
+  public SuccessResponse() {
   }
 
   /**
    **/
-  public InlineResponse200 eventId(String eventId) {
+  public SuccessResponse eventId(String eventId) {
     this.eventId = eventId;
     return this;
   }
@@ -92,15 +88,14 @@ public class InlineResponse200   {
   }
 
   /**
-   * Indicates the outcome of the request. For a failed operation, this should be set to FAILED.
    **/
-  public InlineResponse200 actionStatus(ActionStatusEnum actionStatus) {
+  public SuccessResponse actionStatus(ActionStatusEnum actionStatus) {
     this.actionStatus = actionStatus;
     return this;
   }
 
   
-  @ApiModelProperty(value = "Indicates the outcome of the request. For a failed operation, this should be set to FAILED.")
+  @ApiModelProperty(value = "")
   @JsonProperty("actionStatus")
   public ActionStatusEnum getActionStatus() {
     return actionStatus;
@@ -114,7 +109,7 @@ public class InlineResponse200   {
   /**
    * Defines the success response.
    **/
-  public InlineResponse200 operations(List<Object> operations) {
+  public SuccessResponse operations(List<Object> operations) {
     this.operations = operations;
     return this;
   }
@@ -131,7 +126,7 @@ public class InlineResponse200   {
     this.operations = operations;
   }
 
-  public InlineResponse200 addOperationsItem(Object operationsItem) {
+  public SuccessResponse addOperationsItem(Object operationsItem) {
     if (this.operations == null) {
       this.operations = new ArrayList<>();
     }
@@ -140,53 +135,13 @@ public class InlineResponse200   {
     return this;
   }
 
-  public InlineResponse200 removeOperationsItem(Object operationsItem) {
+  public SuccessResponse removeOperationsItem(Object operationsItem) {
     if (operationsItem != null && this.operations != null) {
       this.operations.remove(operationsItem);
     }
 
     return this;
   }
-  /**
-   * Provides the reason for failing to validate consent.
-   **/
-  public InlineResponse200 failureReason(String failureReason) {
-    this.failureReason = failureReason;
-    return this;
-  }
-
-  
-  @ApiModelProperty(value = "Provides the reason for failing to validate consent.")
-  @JsonProperty("failureReason")
-  public String getFailureReason() {
-    return failureReason;
-  }
-
-  @JsonProperty("failureReason")
-  public void setFailureReason(String failureReason) {
-    this.failureReason = failureReason;
-  }
-
-  /**
-   * Offers a detailed explanation of the failure.
-   **/
-  public InlineResponse200 failureDescription(String failureDescription) {
-    this.failureDescription = failureDescription;
-    return this;
-  }
-
-  
-  @ApiModelProperty(value = "Offers a detailed explanation of the failure.")
-  @JsonProperty("failureDescription")
-  public String getFailureDescription() {
-    return failureDescription;
-  }
-
-  @JsonProperty("failureDescription")
-  public void setFailureDescription(String failureDescription) {
-    this.failureDescription = failureDescription;
-  }
-
 
   @Override
   public boolean equals(Object o) {
@@ -196,29 +151,25 @@ public class InlineResponse200   {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    InlineResponse200 inlineResponse200 = (InlineResponse200) o;
-    return Objects.equals(this.eventId, inlineResponse200.eventId) &&
-        Objects.equals(this.actionStatus, inlineResponse200.actionStatus) &&
-        Objects.equals(this.operations, inlineResponse200.operations) &&
-        Objects.equals(this.failureReason, inlineResponse200.failureReason) &&
-        Objects.equals(this.failureDescription, inlineResponse200.failureDescription);
+    SuccessResponse successResponse = (SuccessResponse) o;
+    return Objects.equals(this.eventId, successResponse.eventId) &&
+        Objects.equals(this.actionStatus, successResponse.actionStatus) &&
+        Objects.equals(this.operations, successResponse.operations);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(eventId, actionStatus, operations, failureReason, failureDescription);
+    return Objects.hash(eventId, actionStatus, operations);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class InlineResponse200 {\n");
+    sb.append("class SuccessResponse {\n");
     
     sb.append("    eventId: ").append(toIndentedString(eventId)).append("\n");
     sb.append("    actionStatus: ").append(toIndentedString(actionStatus)).append("\n");
     sb.append("    operations: ").append(toIndentedString(operations)).append("\n");
-    sb.append("    failureReason: ").append(toIndentedString(failureReason)).append("\n");
-    sb.append("    failureDescription: ").append(toIndentedString(failureDescription)).append("\n");
     sb.append("}");
     return sb.toString();
   }

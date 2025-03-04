@@ -19,11 +19,10 @@
 package org.wso2.financial.services.uk.consent.endpoints.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.minidev.json.JSONArray;
-import net.minidev.json.JSONObject;
+import org.json.JSONObject;
+import org.json.JSONArray;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 
@@ -42,30 +41,34 @@ public class AccountsConsentValidationUtil {
      */
     private static boolean isPermissionCombinationAccepted(JSONArray permissions) {
 
-        if (permissions.contains(CommonConstants.READACCOUNTSBASIC) ||
-                permissions.contains(CommonConstants.READACCOUNTSDETAIL)) {
+        if (containsPermission(permissions, CommonConstants.READACCOUNTSBASIC) ||
+                containsPermission(permissions, CommonConstants.READACCOUNTSDETAIL)) {
 
-            if ((permissions.contains(CommonConstants.READTRANSACTIONSBASIC))
-                    && !(permissions.contains(CommonConstants.READTRANSACTIONSCREDITS)
-                    || permissions.contains(CommonConstants.READTRANSACTIONSDEBITS))) {
+            if ((containsPermission(permissions, CommonConstants.READTRANSACTIONSBASIC))
+                    && !(containsPermission(permissions, CommonConstants.READTRANSACTIONSCREDITS)
+                    || containsPermission(permissions, CommonConstants.READTRANSACTIONSDEBITS))) {
                 return false;
-            } else if ((permissions.contains(CommonConstants.READTRANSACTIONSDETAIL))
-                    && !(permissions.contains(CommonConstants.READTRANSACTIONSCREDITS)
-                    || permissions.contains(CommonConstants.READTRANSACTIONSDEBITS))) {
+            } else if ((containsPermission(permissions, CommonConstants.READTRANSACTIONSDETAIL))
+                    && !(containsPermission(permissions, CommonConstants.READTRANSACTIONSCREDITS)
+                    || containsPermission(permissions, CommonConstants.READTRANSACTIONSDEBITS))) {
                 return false;
-            } else if ((permissions.contains(CommonConstants.READTRANSACTIONSCREDITS))
-                    && !(permissions.contains(CommonConstants.READTRANSACTIONSBASIC)
-                    || permissions.contains(CommonConstants.READTRANSACTIONSDETAIL))) {
+            } else if ((containsPermission(permissions, CommonConstants.READTRANSACTIONSCREDITS))
+                    && !(containsPermission(permissions, CommonConstants.READTRANSACTIONSBASIC)
+                    || containsPermission(permissions, CommonConstants.READTRANSACTIONSDETAIL))) {
                 return false;
-            } else if ((permissions.contains(CommonConstants.READTRANSACTIONSDEBITS))
-                    && !((permissions.contains(CommonConstants.READTRANSACTIONSBASIC))
-                    || permissions.contains(CommonConstants.READTRANSACTIONSDETAIL))) {
+            } else if ((containsPermission(permissions, CommonConstants.READTRANSACTIONSDEBITS))
+                    && !((containsPermission(permissions, CommonConstants.READTRANSACTIONSBASIC))
+                    || containsPermission(permissions, CommonConstants.READTRANSACTIONSDETAIL))) {
                 return false;
             } else {
                 return true;
             }
         }
         return false;
+    }
+
+    public static boolean containsPermission(JSONArray permissions, String permission) {
+        return permissions.toList().contains(permission);
     }
 
     /**
@@ -115,68 +118,64 @@ public class AccountsConsentValidationUtil {
      * @param request
      * @return
      */
-    public static JSONObject validateAccountsConsentRequest(JSONObject request) {
+    public static Object validateAccountsConsentRequest(Object request, String eventId) throws Exception {
 
-        JSONObject validationResponse = new JSONObject();
+        JSONObject jsonRequestBody = CommonConsentValidationUtil.convertObjectToJson(request);
 
-        JSONObject data = (JSONObject) request.get(CommonConstants.DATA);
+        JSONObject data = (JSONObject) (jsonRequestBody).get(CommonConstants.DATA);
         JSONArray permissions = (JSONArray) data.get(CommonConstants.PERMISSIONS);
 
         //Check whether the payload contains valid permissions
         if (!isPermissionCombinationAccepted(permissions)) {
             log.error("Permission array contains unacceptable combinations");
 
-            return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_INVALID,
-                    ErrorConstants.MSG_WRONG_PERMISSIONS, ErrorConstants.PATH_PERMISSIONS);
+            return CommonConsentValidationUtil.getResponse(eventId,false, ErrorConstants.MSG_WRONG_PERMISSIONS);
         }
 
         //Check whether the expiration date is valid
-        if (data.containsKey(CommonConstants.EXPIRATION_DATE) &&
+        if (data.has(CommonConstants.EXPIRATION_DATE) &&
                 (!(data.get(CommonConstants.EXPIRATION_DATE) instanceof String) ||
-                        !CommonConsentValidationUtil.isValid8601(data.getAsString(CommonConstants.EXPIRATION_DATE)))) {
+                        !CommonConsentValidationUtil.isValid8601(data.getString(CommonConstants.EXPIRATION_DATE)))) {
             log.error("Expiration Date Time validation failed");
-            return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_INVALID_DATE,
-                    ErrorConstants.MSG_INVALID_DATE_FORMAT, ErrorConstants.PATH_EXPIRATION_DATE);
+
+            return CommonConsentValidationUtil.getResponse(eventId,false, ErrorConstants.MSG_INVALID_DATE_FORMAT);
         }
 
         //Check whether the expiration date is expired
-        if (data.containsKey(CommonConstants.EXPIRATION_DATE) &&
-                !isConsentExpirationTimeValid(data.getAsString(CommonConstants.EXPIRATION_DATE))) {
+        if (data.has(CommonConstants.EXPIRATION_DATE) &&
+                !isConsentExpirationTimeValid(data.getString(CommonConstants.EXPIRATION_DATE))) {
             log.error("Expiration Date Time is expired");
-            return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_INVALID_DATE,
-                    ErrorConstants.EXPIRED_DATE_ERROR, ErrorConstants.PATH_EXPIRATION_DATE);
+
+            return CommonConsentValidationUtil.getResponse(eventId,false, ErrorConstants.EXPIRED_DATE_ERROR);
         }
 
         //Check whether the transaction from date is valid
-        if (data.containsKey(CommonConstants.TRANSACTION_FROM_DATE) &&
+        if (data.has(CommonConstants.TRANSACTION_FROM_DATE) &&
                 (!(data.get(CommonConstants.TRANSACTION_FROM_DATE) instanceof String) ||
-                        !CommonConsentValidationUtil.isValid8601(data
-                                .getAsString(CommonConstants.TRANSACTION_FROM_DATE)))) {
+                        !CommonConsentValidationUtil.isValid8601(data.getString(CommonConstants.TRANSACTION_FROM_DATE)))) {
             log.error("Transaction From Date Time validation failed");
-            return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_INVALID_DATE,
-                    ErrorConstants.MSG_INVALID_DATE_FORMAT, ErrorConstants.PATH_TRANSACTION_DATE);
+
+            return CommonConsentValidationUtil.getResponse(eventId,false, ErrorConstants.MSG_INVALID_DATE_FORMAT);
         }
 
         //Check whether the transaction to date is valid
-        if (data.containsKey(CommonConstants.TRANSACTION_TO_DATE) &&
+        if (data.has(CommonConstants.TRANSACTION_TO_DATE) &&
                 (!(data.get(CommonConstants.TRANSACTION_TO_DATE) instanceof String) ||
-                        !CommonConsentValidationUtil.isValid8601(data
-                                .getAsString(CommonConstants.TRANSACTION_TO_DATE)))) {
+                        !CommonConsentValidationUtil.isValid8601(data.getString(CommonConstants.TRANSACTION_TO_DATE)))) {
             log.error("Transaction To Date Time validation failed");
-            return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_INVALID_DATE,
-                    ErrorConstants.MSG_INVALID_DATE_FORMAT, ErrorConstants.PATH_TRANSACTION_TO_DATE);
+
+            return CommonConsentValidationUtil.getResponse(eventId,false, ErrorConstants.MSG_INVALID_DATE_FORMAT);
         }
 
         //Check whether the transaction from data time is earlier than transaction to date time
-        if (!isTransactionFromToTimeValid(data.getAsString(CommonConstants.TRANSACTION_FROM_DATE),
-                        data.getAsString(CommonConstants.TRANSACTION_TO_DATE))) {
+        if (!isTransactionFromToTimeValid(data.getString(CommonConstants.TRANSACTION_FROM_DATE),
+                        data.getString(CommonConstants.TRANSACTION_TO_DATE))) {
             log.error("Transaction From and To Date Time validation failed");
-            return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_INVALID_DATE,
-                    ErrorConstants.TRANSACTION_TO_FROM_INVALID_ERROR, ErrorConstants.PATH_DATE);
+
+            return CommonConsentValidationUtil.getResponse(eventId,false, ErrorConstants.TRANSACTION_TO_FROM_INVALID_ERROR);
         }
 
-        validationResponse.put(CommonConstants.IS_VALID, true);
-        return validationResponse;
+        return CommonConsentValidationUtil.getResponse(eventId,true, CommonConstants.IS_VALID);
 
     }
 }

@@ -18,8 +18,8 @@
 
 package org.wso2.financial.services.uk.consent.endpoints.utils;
 
-import net.minidev.json.JSONArray;
-import net.minidev.json.JSONObject;
+import org.json.JSONObject;
+import org.json.JSONArray;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.UUID;
@@ -44,7 +44,7 @@ public class ErrorUtil {
         JSONObject errorObject = new JSONObject();
         JSONArray errorArray = new JSONArray();
 
-        errorArray.add(constructUKErrorObject(errorCode, errorMsg, path));
+        errorArray.put(constructUKErrorObject(errorCode, errorMsg, path));
 
         errorObject.put(ErrorConstants.CODE, httpCode);
         errorObject.put(ErrorConstants.ID, errorId);

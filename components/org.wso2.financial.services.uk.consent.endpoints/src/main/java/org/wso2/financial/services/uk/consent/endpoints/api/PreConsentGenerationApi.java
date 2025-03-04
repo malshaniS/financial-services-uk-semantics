@@ -18,22 +18,28 @@
 
 package org.wso2.financial.services.uk.consent.endpoints.api;
 
-import io.swagger.annotations.*;
-import net.minidev.json.JSONObject;
-import net.minidev.json.parser.JSONParser;
-import net.minidev.json.parser.ParseException;
-import org.wso2.financial.services.uk.consent.endpoints.utils.*;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
+import org.json.JSONObject;
+import org.wso2.financial.services.uk.consent.endpoints.model.InlineResponse200;
+import org.wso2.financial.services.uk.consent.endpoints.model.RequestBody;
+import org.wso2.financial.services.uk.consent.endpoints.utils.AccountsConsentValidationUtil;
+import org.wso2.financial.services.uk.consent.endpoints.utils.CommonConstants;
+import org.wso2.financial.services.uk.consent.endpoints.utils.ErrorResponse;
+import org.wso2.financial.services.uk.consent.endpoints.utils.PaymentsConsentValidationUtil;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import java.io.BufferedReader;
-import java.io.IOException;
 
 /**
 * Represents a collection of functions to interact with the API endpoints.
@@ -49,26 +55,27 @@ public class PreConsentGenerationApi {
     @ApiOperation(value = "handle pre-consent generation validations", notes = "", response = InlineResponse200.class, authorizations = {
         @Authorization(value = "OAuth2", scopes = {
              }),
-        
+
         @Authorization(value = "BasicAuth")
          }, tags={  })
-    @ApiResponses(value = { 
+    @ApiResponses(value = {
         @ApiResponse(code = 200, message = "Ok", response = InlineResponse200.class),
         @ApiResponse(code = 400, message = "Bad Request", response = ErrorResponse.class),
         @ApiResponse(code = 500, message = "Server Error", response = ErrorResponse.class)
     })
-    public Response preConsentGenerationPost(@Context HttpServletRequest request, @Context HttpServletResponse response) throws IOException {
+    public Response preConsentGenerationPost(@Context HttpServletRequest request, @Valid @NotNull RequestBody requestBody) throws Exception {
 
         // Read the request body
-
-        JSONObject jsonObject = CommonConsentValidationUtil.getPayload(request);
+        Object consentReceipt = requestBody.getEvent().getRequest().getConsentReceipt();
 
         String requestPath = request.getRequestURI();
-        JSONObject validationResponse = null;
+        Object validationResponse = null;
+        String eventId = requestBody.getEventId();
+
         if(requestPath != null){
             //Accounts Consent Validations
             if (requestPath.contains(CommonConstants.ACCOUNT_CONSENT_PATH)){
-                validationResponse = AccountsConsentValidationUtil.validateAccountsConsentRequest(jsonObject);
+                validationResponse = AccountsConsentValidationUtil.validateAccountsConsentRequest(consentReceipt, eventId);
             }
             //Payments Consent Validations
             else if (requestPath.contains(CommonConstants.DOMESTIC_CONSENT_PATH) ||
@@ -78,12 +85,12 @@ public class PreConsentGenerationApi {
                     requestPath.contains(CommonConstants.INTERNATIONAL_SCHEDULED_CONSENT_PATH) ||
                     requestPath.contains(CommonConstants.INTERNATIONAL_STANDING_ORDER_CONSENT_PATH)){
 
-                validationResponse = PaymentsConsentValidationUtil.validatePaymentConsentRequest(requestPath, jsonObject);
+                validationResponse = PaymentsConsentValidationUtil.validatePaymentConsentRequest(requestPath, consentReceipt, eventId);
             }
         }
 
         // Check if validationResponse contains an error message
-        if (validationResponse != null && validationResponse.containsKey("errors")) {
+        if (validationResponse != null && validationResponse.toString().contains("errors")) {
             return Response.status(Response.Status.BAD_REQUEST).entity(validationResponse).build();
         }
 

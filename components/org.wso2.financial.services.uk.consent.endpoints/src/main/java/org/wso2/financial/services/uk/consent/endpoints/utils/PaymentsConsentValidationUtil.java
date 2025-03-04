@@ -18,7 +18,7 @@
 
 package org.wso2.financial.services.uk.consent.endpoints.utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.minidev.json.JSONObject;
+import org.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -108,10 +108,10 @@ public class PaymentsConsentValidationUtil {
      */
     public static boolean validateExchangeRateInformation(JSONObject exchangeRateInformation) {
 
-        String rateType = exchangeRateInformation.getAsString(CommonConstants.RATE_TYPE);
+        String rateType = exchangeRateInformation.getString(CommonConstants.RATE_TYPE);
 
         Optional<String> contractIdentification = Optional.ofNullable(exchangeRateInformation
-                .getAsString(CommonConstants.CONTRACT_IDENTIFICATION));
+                .getString(CommonConstants.CONTRACT_IDENTIFICATION));
 
         Optional<Double> exchangeRate = Optional.ofNullable((Double) exchangeRateInformation
                 .get(CommonConstants.EXCHANGE_RATE));
@@ -131,7 +131,7 @@ public class PaymentsConsentValidationUtil {
      */
     public static boolean validateInstructedAmountIsNotZero(JSONObject instructedAmount) {
 
-        if (Double.parseDouble(instructedAmount.getAsString(CommonConstants.AMOUNT)) < 1) {
+        if (Double.parseDouble(instructedAmount.getString(CommonConstants.AMOUNT)) < 1) {
             return false;
         }
         return true;
@@ -145,7 +145,7 @@ public class PaymentsConsentValidationUtil {
      */
     public static boolean validateCreditorAgent(String schemaName, JSONObject creditorAgent) {
 
-        String creditor_Agent = creditorAgent.getAsString(CommonConstants.CREDITOR_AGENT);
+        String creditor_Agent = creditorAgent.getString(CommonConstants.CREDITOR_AGENT);
 
         if (CommonConstants.UK_OBIE_SORT_CODE_ACCOUNT_NUMBER.equals(schemaName) &&
                 !(creditor_Agent == null)) {
@@ -218,7 +218,7 @@ public class PaymentsConsentValidationUtil {
      * @param initiation Initiation object
      * @return
      */
-    public static JSONObject validateCreditorAccount(JSONObject initiation) {
+    public static Object validateCreditorAccount(JSONObject initiation, String eventId) {
 
         JSONObject validationResponse = new JSONObject();
 
@@ -226,19 +226,17 @@ public class PaymentsConsentValidationUtil {
         JSONObject creditorAccount = (JSONObject) initiation.get(CommonConstants.CREDITOR_ACC);
 
         //Validate Sort Code number scheme
-        String schemeName = creditorAccount.getAsString(CommonConstants.SCHEME_NAME);
-        String identification = creditorAccount.getAsString(CommonConstants.IDENTIFICATION);
+        String schemeName = creditorAccount.getString(CommonConstants.SCHEME_NAME);
+        String identification = creditorAccount.getString(CommonConstants.IDENTIFICATION);
 
         if (!checkSortCodeSchemeNameAndIdentificationValidity(schemeName, identification)) {
 
             log.error(ErrorConstants.INVALID_IDENTIFICATION);
-            validationResponse.put(CommonConstants.IS_VALID, false);
 
-            return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.INVALID_REQ_PAYLOAD,
-                    ErrorConstants.INVALID_IDENTIFICATION, ErrorConstants.PATH_DEBTOR_ACCOUNT);
+            return CommonConsentValidationUtil.getResponse(eventId, false, ErrorConstants.INVALID_IDENTIFICATION);
         }
 
-        return (JSONObject) validationResponse.put(CommonConstants.IS_VALID, true);
+        return CommonConsentValidationUtil.getResponse(eventId,true, CommonConstants.IS_VALID);
     }
 
     /**
@@ -247,7 +245,7 @@ public class PaymentsConsentValidationUtil {
      * @param initiation Initiation object
      * @return
      */
-    public static JSONObject validateDebtorAccount(JSONObject initiation) {
+    public static Object validateDebtorAccount(JSONObject initiation, String eventId) {
 
         JSONObject validationResponse = new JSONObject();
 
@@ -255,19 +253,18 @@ public class PaymentsConsentValidationUtil {
         JSONObject creditorAccount = (JSONObject) initiation.get(CommonConstants.DEBTOR_ACC);
 
         //Validate Sort Code number scheme
-        String schemeName = creditorAccount.getAsString(CommonConstants.SCHEME_NAME);
-        String identification = creditorAccount.getAsString(CommonConstants.IDENTIFICATION);
+        String schemeName = creditorAccount.getString(CommonConstants.SCHEME_NAME);
+        String identification = creditorAccount.getString(CommonConstants.IDENTIFICATION);
 
         if (!checkSortCodeSchemeNameAndIdentificationValidity(schemeName, identification)) {
 
             log.error(ErrorConstants.INVALID_IDENTIFICATION);
             validationResponse.put(CommonConstants.IS_VALID, false);
 
-            return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.INVALID_REQ_PAYLOAD,
-                    ErrorConstants.INVALID_IDENTIFICATION, ErrorConstants.PATH_DEBTOR_ACCOUNT);
+            return CommonConsentValidationUtil.getResponse(eventId,false, ErrorConstants.INVALID_IDENTIFICATION);
         }
 
-        return (JSONObject) validationResponse.put(CommonConstants.IS_VALID, true);
+        return CommonConsentValidationUtil.getResponse(eventId, true, CommonConstants.IS_VALID);
     }
 
     /**
@@ -277,25 +274,25 @@ public class PaymentsConsentValidationUtil {
      * @param request     Request Object
      * @return
      */
-    public static JSONObject validatePaymentConsentRequest(String requestPath, JSONObject request) {
+    public static Object validatePaymentConsentRequest(String requestPath, Object request, String eventId) {
 
         JSONObject validationResponse = new JSONObject();
 
-        JSONObject data = (JSONObject) request.get(CommonConstants.DATA);
+        JSONObject data = (JSONObject) ((JSONObject) request).get(CommonConstants.DATA);
         JSONObject initiation = (JSONObject) data.get(CommonConstants.INITIATION);
         JSONObject instructedAmount = (JSONObject) initiation.get(CommonConstants.INSTRUCTED_AMOUNT);
         JSONObject creditorAgent = (JSONObject) initiation.get(CommonConstants.CREDITOR_AGENT);
-        String firstPaymentDateTime = initiation.getAsString(CommonConstants.FIRST_PAYMENT_DATE);
-        String finalPaymentDateTime = initiation.getAsString(CommonConstants.FINAL_PAYMENT_DATE);
+        String firstPaymentDateTime = initiation.getString(CommonConstants.FIRST_PAYMENT_DATE);
+        String finalPaymentDateTime = initiation.getString(CommonConstants.FINAL_PAYMENT_DATE);
         JSONObject requestExecutionDateTime = (JSONObject) initiation.get(CommonConstants.REQUEST_EXECUTION_DATE);
-        String recurringPaymentDateTime = initiation.getAsString(CommonConstants.RECURRING_PAYMENT_DATE);
-        String recurringPaymentAmount = initiation.getAsString(CommonConstants.RECURRING_AMOUNT);
-        String firstPaymentAmount = initiation.getAsString(CommonConstants.FIRST_PAYMENT_AMOUNT);
+        String recurringPaymentDateTime = initiation.getString(CommonConstants.RECURRING_PAYMENT_DATE);
+        String recurringPaymentAmount = initiation.getString(CommonConstants.RECURRING_AMOUNT);
+        String firstPaymentAmount = initiation.getString(CommonConstants.FIRST_PAYMENT_AMOUNT);
         JSONObject exchangeRateInformation = (JSONObject) initiation.get(CommonConstants.EXCHANGE_RATE_INFO);
         JSONObject authorisation = (JSONObject) data.get(CommonConstants.AUTHORISATION);
-        String completionDateTime = authorisation.getAsString(CommonConstants.COMPLETION_DATE);
+        String completionDateTime = authorisation.getString(CommonConstants.COMPLETION_DATE);
         JSONObject risk = (JSONObject) data.get(CommonConstants.RISK);
-        String paymentContextCode = risk.getAsString(CommonConstants.CONTEXT_CODE);
+        String paymentContextCode = risk.getString(CommonConstants.CONTEXT_CODE);
         JSONObject firstPaymentObj = (JSONObject) initiation.get(CommonConstants.FIRST_PAYMENT_AMOUNT);
         JSONObject recurringPaymentObj = (JSONObject) initiation.get(CommonConstants.RECURRING_AMOUNT);
         JSONObject finalPaymentObj = (JSONObject) initiation.get(CommonConstants.FINAL_PAYMENT_AMOUNT);
@@ -306,13 +303,12 @@ public class PaymentsConsentValidationUtil {
 
             if (!validateInstructedAmountIsNotZero(instructedAmount)) {
                 log.error(ErrorConstants.INVALID_INSTRUCTED_AMOUNT);
-                return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_INVALID,
-                        ErrorConstants.INVALID_INSTRUCTED_AMOUNT, ErrorConstants.PATH_INSTRUCTED_AMOUNT);
+                return CommonConsentValidationUtil.getResponse(eventId,false, ErrorConstants.INVALID_INSTRUCTED_AMOUNT);
+
             }
-            if (!validateMaxInstructedAmount(instructedAmount.getAsString(CommonConstants.AMOUNT))) {
+            if (!validateMaxInstructedAmount(instructedAmount.getString(CommonConstants.AMOUNT))) {
                 log.error(ErrorConstants.MAX_INSTRUCTED_AMOUNT);
-                return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_INVALID,
-                        ErrorConstants.MAX_INSTRUCTED_AMOUNT, ErrorConstants.PATH_INSTRUCTED_AMOUNT);
+                return CommonConsentValidationUtil.getResponse(eventId,false, ErrorConstants.MAX_INSTRUCTED_AMOUNT);
             }
         }
 
@@ -320,19 +316,18 @@ public class PaymentsConsentValidationUtil {
         if (shouldInitiationRequestBeRejected()) {
 
             log.error(ErrorConstants.MSG_ELAPSED_CUT_OFF_DATE_TIME);
-            return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.PAYMENT_INITIATION_HANDLE_ERROR,
-                    ErrorConstants.MSG_ELAPSED_CUT_OFF_DATE_TIME, ErrorConstants.PATH_REQUEST_TIME);
+            return CommonConsentValidationUtil.getResponse(eventId,false, ErrorConstants.MSG_ELAPSED_CUT_OFF_DATE_TIME);
         }
 
         //Validate Creditor Account
         if (!requestPath.contains(CommonConstants.FILE_PAYMENT_PATH)) {
 
-            validateCreditorAccount(initiation);
+            validateCreditorAccount(initiation, eventId);
         }
 
         //Validate Debtor Account
         if(initiation.get(CommonConstants.DEBTOR_ACC) != null) {
-            validateDebtorAccount(initiation);
+            validateDebtorAccount(initiation, eventId);
         }
 
         //check whether creditor agent is not available if creditor identification is sort code scheme
@@ -343,8 +338,7 @@ public class PaymentsConsentValidationUtil {
             if (!validateCreditorAgent(CommonConstants.UK_OBIE_SORT_CODE_ACCOUNT_NUMBER, creditorAgent)) {
 
                 log.error(ErrorConstants.CREDITOR_AGENT_UNEXPECTED);
-                return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_UNEXPECTED,
-                        ErrorConstants.CREDITOR_AGENT_UNEXPECTED, ErrorConstants.PATH_CREDIT_AGENT);
+                return CommonConsentValidationUtil.getResponse(eventId,false, ErrorConstants.CREDITOR_AGENT_UNEXPECTED);
             }
         }
 
@@ -354,11 +348,10 @@ public class PaymentsConsentValidationUtil {
                 requestPath.contains(CommonConstants.FILE_PAYMENT_PATH)) {
 
             if ((initiation.get(CommonConstants.REQUEST_EXECUTION_DATE) instanceof String) &&
-                    !validateMaxFutureDate(requestExecutionDateTime.getAsString(CommonConstants.REQUEST_EXECUTION_DATE))) {
+                    !validateMaxFutureDate(requestExecutionDateTime.getString(CommonConstants.REQUEST_EXECUTION_DATE))) {
 
                 log.error(ErrorConstants.MAX_EXECUTION_DATE);
-                return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_INVALID,
-                        ErrorConstants.MAX_EXECUTION_DATE, ErrorConstants.PATH_EXECUTION_DATE);
+                return CommonConsentValidationUtil.getResponse(eventId,false, ErrorConstants.MAX_EXECUTION_DATE);
             }
         }
 
@@ -371,9 +364,8 @@ public class PaymentsConsentValidationUtil {
                     !CommonConsentValidationUtil.isValid8601(firstPaymentDateTime)) {
 
                 log.error(ErrorConstants.INVALID_FIRST_PAYMENT_DATE_FORMAT);
-                return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_INVALID_DATE,
-                        ErrorConstants.INVALID_FIRST_PAYMENT_DATE_FORMAT,
-                        ErrorConstants.PATH_FIRST_PAYMENT_DATE_TIME);
+                return CommonConsentValidationUtil.getResponse(eventId,false,
+                        ErrorConstants.INVALID_FIRST_PAYMENT_DATE_FORMAT);
             }
 
             //Verify FinalPaymentDateTime is valid
@@ -381,9 +373,8 @@ public class PaymentsConsentValidationUtil {
                     !CommonConsentValidationUtil.isValid8601(finalPaymentDateTime)) {
 
                 log.error(ErrorConstants.INVALID_FINAL_PAYMENT_DATE_FORMAT);
-                return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_INVALID_DATE,
-                        ErrorConstants.INVALID_FINAL_PAYMENT_DATE_FORMAT,
-                        ErrorConstants.PATH_FINAL_PAYMENT_DATE_TIME);
+                return CommonConsentValidationUtil.getResponse(eventId,false,
+                        ErrorConstants.INVALID_FINAL_PAYMENT_DATE_FORMAT);
             }
 
             //Ensure firstPaymentDateTime is before FinalPaymentDateTime
@@ -391,24 +382,24 @@ public class PaymentsConsentValidationUtil {
                     !validRelativeOrder(firstPaymentDateTime, finalPaymentDateTime)) {
 
                 log.error(ErrorConstants.FINAL_PAYMENT_BEFORE_FIRSTPAYEMNT);
-                return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_INVALID_DATE,
-                        ErrorConstants.FINAL_PAYMENT_BEFORE_FIRSTPAYEMNT, ErrorConstants.PATH_FINAL_PAYMENT_DATE_TIME);
+                return CommonConsentValidationUtil.getResponse(eventId,false,
+                        ErrorConstants.FINAL_PAYMENT_BEFORE_FIRSTPAYEMNT);
             }
 
             // if neither no. of payments nor final payment date time is present in the request,
-            //      then standing order is open ended.
-            // Otherwise, standing order is not open ended.
-            // If standing order is not open ended,
+            //      then standing order is open-ended.
+            // Otherwise, standing order is not open-ended.
+            // If standing order is not open-ended,
             //      both no. of payments and final payment date time should not be specified at the same time.
 
-            String numberOfPayments = (initiation.containsKey(CommonConstants.NUMBER_OF_PAYMENTS)) ?
-                    initiation.getAsString(CommonConstants.NUMBER_OF_PAYMENTS) : null;
+            String numberOfPayments = (initiation.has(CommonConstants.NUMBER_OF_PAYMENTS)) ?
+                    initiation.getString(CommonConstants.NUMBER_OF_PAYMENTS) : null;
 
             if (StringUtils.isNotEmpty(numberOfPayments) && StringUtils.isNotEmpty(finalPaymentDateTime)) {
 
                 log.error(ErrorConstants.INVALID_STANDING_ORDER);
-                return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_INVALID,
-                        ErrorConstants.INVALID_STANDING_ORDER, ErrorConstants.PATH_FINAL_PAYMENT_DATE_TIME);
+                return CommonConsentValidationUtil.getResponse(eventId,false,
+                        ErrorConstants.INVALID_STANDING_ORDER);
             }
         }
 
@@ -420,9 +411,8 @@ public class PaymentsConsentValidationUtil {
                     !CommonConsentValidationUtil.isValid8601(recurringPaymentDateTime)) {
 
                 log.error(ErrorConstants.INVALID_RECURRING_PAYMENT_DATE_FORMAT);
-                return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_INVALID_DATE,
-                        ErrorConstants.INVALID_RECURRING_PAYMENT_DATE_FORMAT,
-                        ErrorConstants.PATH_RECURRING_PAYMENT_DATE_TIME);
+                return CommonConsentValidationUtil.getResponse(eventId,false,
+                        ErrorConstants.INVALID_RECURRING_PAYMENT_DATE_FORMAT);
             }
 
             //Ensure RecurringPaymentDateTime is before FinalPaymentDateTime
@@ -430,9 +420,8 @@ public class PaymentsConsentValidationUtil {
                     !validRelativeOrder(recurringPaymentDateTime, finalPaymentDateTime)) {
 
                 log.error(ErrorConstants.FINAL_PAYMENT_BEFORE_RECURRINGPAYMENT);
-                return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_INVALID_DATE,
-                        ErrorConstants.FINAL_PAYMENT_BEFORE_RECURRINGPAYMENT,
-                        ErrorConstants.PATH_FINAL_PAYMENT_DATE_TIME);
+                return CommonConsentValidationUtil.getResponse(eventId,false,
+                        ErrorConstants.FINAL_PAYMENT_BEFORE_RECURRINGPAYMENT);
             }
 
             //Ensure firstPaymentDateTime is before RecurringPaymentDateTime
@@ -440,9 +429,8 @@ public class PaymentsConsentValidationUtil {
                     !validRelativeOrder(firstPaymentDateTime, recurringPaymentDateTime)) {
 
                 log.error(ErrorConstants.RECURRINGPAYMENT_BEFORE_FIRSTPAYMENT);
-                return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_INVALID_DATE,
-                        ErrorConstants.RECURRINGPAYMENT_BEFORE_FIRSTPAYMENT,
-                        ErrorConstants.PATH_RECURRING_PAYMENT_DATE_TIME);
+                return CommonConsentValidationUtil.getResponse(eventId,false,
+                        ErrorConstants.RECURRINGPAYMENT_BEFORE_FIRSTPAYMENT);
             }
 
             //validate recurring payment
@@ -452,8 +440,8 @@ public class PaymentsConsentValidationUtil {
                             recurringPaymentAmount)) {
 
                 log.error(ErrorConstants.INVALID_RECURRING_PAYMENT);
-                return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_INVALID,
-                        ErrorConstants.INVALID_RECURRING_PAYMENT, ErrorConstants.PATH_RECURRING_PAYMENT_DATE_TIME);
+                return CommonConsentValidationUtil.getResponse(eventId,false,
+                        ErrorConstants.INVALID_RECURRING_PAYMENT);
             }
         }
 
@@ -464,17 +452,16 @@ public class PaymentsConsentValidationUtil {
             if (!validateExchangeRateInformation(exchangeRateInformation)) {
 
                 if (CommonConstants.AGREED_RATE_TYPE
-                        .equals(exchangeRateInformation.getAsString(CommonConstants.RATE_TYPE))) {
+                        .equals(exchangeRateInformation.getString(CommonConstants.RATE_TYPE))) {
 
                     log.error(ErrorConstants.INVALID_EXCHANGE_RATE_INFO_AGREED_RATE);
-                    return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_EXPECTED,
-                            ErrorConstants.INVALID_EXCHANGE_RATE_INFO_AGREED_RATE,
-                            ErrorConstants.PATH_EXCHANGE_RATE_INFO);
+                    return CommonConsentValidationUtil.getResponse(eventId,false,
+                            ErrorConstants.INVALID_EXCHANGE_RATE_INFO_AGREED_RATE);
                 } else {
 
                     log.error(ErrorConstants.INVALID_EXCHANGE_RATE_INFO);
-                    return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_UNEXPECTED,
-                            ErrorConstants.INVALID_EXCHANGE_RATE_INFO, ErrorConstants.PATH_EXCHANGE_RATE_INFO);
+                    return CommonConsentValidationUtil.getResponse(eventId,false,
+                            ErrorConstants.INVALID_EXCHANGE_RATE_INFO);
                 }
             }
         }
@@ -483,29 +470,29 @@ public class PaymentsConsentValidationUtil {
         if (!CommonConsentValidationUtil.isValid8601(completionDateTime)) {
 
             log.error(ErrorConstants.INVALID_COMPLETION_DATE_FORMAT);
-            return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_INVALID_DATE,
-                    ErrorConstants.INVALID_COMPLETION_DATE_FORMAT, ErrorConstants.PATH_COMPLETION_DATE_TIME);
+            return CommonConsentValidationUtil.getResponse(eventId,false,
+                    ErrorConstants.INVALID_COMPLETION_DATE_FORMAT);
         }
 
         //Validate Risk Section
         if (StringUtils.isNotEmpty(paymentContextCode) &&
-                (CommonConstants.ECOMMERCE_GOODS.equalsIgnoreCase(risk.getAsString(CommonConstants.CONTEXT_CODE)) ||
-                        CommonConstants.ECOMMERCE_SERVICES.equalsIgnoreCase(risk.getAsString(CommonConstants.CONTEXT_CODE)))) {
+                (CommonConstants.ECOMMERCE_GOODS.equalsIgnoreCase(risk.getString(CommonConstants.CONTEXT_CODE)) ||
+                        CommonConstants.ECOMMERCE_SERVICES.equalsIgnoreCase(risk.getString(CommonConstants.CONTEXT_CODE)))) {
 
-            if (StringUtils.isEmpty(risk.getAsString(CommonConstants.MERCHANT_CATEGORY_CODE)) &&
-                    StringUtils.isEmpty(risk.getAsString(CommonConstants.MERCHANT_IDENTIFICATION))) {
+            if (StringUtils.isEmpty(risk.getString(CommonConstants.MERCHANT_CATEGORY_CODE)) &&
+                    StringUtils.isEmpty(risk.getString(CommonConstants.MERCHANT_IDENTIFICATION))) {
 
                 log.error(ErrorConstants.INVALID_RISK_SECTION);
-                return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_MISSING,
-                        ErrorConstants.INVALID_RISK_SECTION, ErrorConstants.PATH_RISK);
+                return CommonConsentValidationUtil.getResponse(eventId,false,
+                        ErrorConstants.INVALID_RISK_SECTION);
             }
             if (CommonConstants.ECOMMERCE_GOODS
-                    .equalsIgnoreCase(risk.getAsString(CommonConstants.CONTEXT_CODE))) {
+                    .equalsIgnoreCase(risk.getString(CommonConstants.CONTEXT_CODE))) {
 
                 if (risk.get(CommonConstants.DELIVERY_ADDRESS) == null) {
                     log.error(ErrorConstants.INVALID_DELIVERY_ADDRESS);
-                    return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_MISSING,
-                            ErrorConstants.INVALID_DELIVERY_ADDRESS, ErrorConstants.PATH_RISK_ADDRESS);
+                    return CommonConsentValidationUtil.getResponse(eventId,false,
+                            ErrorConstants.INVALID_DELIVERY_ADDRESS);
                 }
             }
         }
@@ -515,106 +502,94 @@ public class PaymentsConsentValidationUtil {
             //Validate FirstPaymentAmount
             String firstPayAmount = null;
 
-            if (initiation.containsKey(CommonConstants.FIRST_PAYMENT_AMOUNT)) {
+            if (initiation.has(CommonConstants.FIRST_PAYMENT_AMOUNT)) {
                 if ((initiation.get(CommonConstants.FIRST_PAYMENT_AMOUNT) instanceof JSONObject)) {
 
-                    if (firstPaymentObj.containsKey(CommonConstants.AMOUNT)) {
+                    if (firstPaymentObj.has(CommonConstants.AMOUNT)) {
 
-                        firstPayAmount = firstPaymentObj.getAsString(CommonConstants.AMOUNT);
+                        firstPayAmount = firstPaymentObj.getString(CommonConstants.AMOUNT);
 
                         //Validate Max Instructed Amount
                         if (!(firstPaymentObj.get(CommonConstants.AMOUNT) instanceof String) ||
                                 !validateMaxInstructedAmount(firstPayAmount)) {
 
                             log.error(ErrorConstants.MAX_FIRST_INSTRUCTED_AMOUNT_ERROR);
-                            return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_INVALID,
-                                    ErrorConstants.MAX_FIRST_INSTRUCTED_AMOUNT_ERROR,
-                                    ErrorConstants.PATH_FIRST_PAYMENT_AMOUNT_AMOUNT);
+                            return CommonConsentValidationUtil.getResponse(eventId,false,
+                                    ErrorConstants.MAX_FIRST_INSTRUCTED_AMOUNT_ERROR);
                         }
                     } else {
                         log.error(ErrorConstants.MISSING_FIRST_PAYMENT_AMOUNT);
-                        return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_MISSING,
-                                ErrorConstants.MISSING_FIRST_PAYMENT_AMOUNT,
-                                ErrorConstants.PATH_FIRST_PAYMENT_AMOUNT_AMOUNT);
+                        return CommonConsentValidationUtil.getResponse(eventId,false,
+                                ErrorConstants.MISSING_FIRST_PAYMENT_AMOUNT);
                     }
                 } else {
                     log.error(ErrorConstants.INVALID_FIRST_PAYMENT_AMOUNT_OBJECT);
-                    return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_INVALID,
-                            ErrorConstants.INVALID_FIRST_PAYMENT_AMOUNT_OBJECT,
-                            ErrorConstants.PATH_FIRST_PAYMENT_AMOUNT);
+                    return CommonConsentValidationUtil.getResponse(eventId,false,
+                            ErrorConstants.INVALID_FIRST_PAYMENT_AMOUNT_OBJECT);
                 }
             } else {
                 log.error(ErrorConstants.MISSING_FIRST_PAYMENT_AMOUNT_OBJECT);
-                return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_MISSING,
-                        ErrorConstants.MISSING_FIRST_PAYMENT_AMOUNT_OBJECT,
-                        ErrorConstants.PATH_FIRST_PAYMENT_AMOUNT_AMOUNT);
+                return CommonConsentValidationUtil.getResponse(eventId,false,
+                        ErrorConstants.MISSING_FIRST_PAYMENT_AMOUNT_OBJECT);
             }
 
             //Validate RecurringPaymentAmount
             String recurringPayAmount = null;
 
-            if (initiation.containsKey(CommonConstants.RECURRING_AMOUNT)) {
+            if (initiation.has(CommonConstants.RECURRING_AMOUNT)) {
                 if ((initiation.get(CommonConstants.RECURRING_AMOUNT) instanceof JSONObject)) {
 
-                    if (recurringPaymentObj.containsKey(CommonConstants.AMOUNT)) {
-                        recurringPayAmount = recurringPaymentObj.getAsString(CommonConstants.AMOUNT);
+                    if (recurringPaymentObj.has(CommonConstants.AMOUNT)) {
+                        recurringPayAmount = recurringPaymentObj.getString(CommonConstants.AMOUNT);
 
                         //Validate Max Instructed Amount
                         if (!(recurringPaymentObj.get(CommonConstants.AMOUNT) instanceof String) ||
                                 !validateMaxInstructedAmount(recurringPayAmount)) {
 
                             log.error(ErrorConstants.MAX_RECURRING_INSTRUCTED_AMOUNT);
-                            return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_INVALID,
-                                    ErrorConstants.MAX_RECURRING_INSTRUCTED_AMOUNT,
-                                    ErrorConstants.PATH_RECURRING_PAYMENT_AMOUNT_AMOUNT);
+                            return CommonConsentValidationUtil.getResponse(eventId,false,
+                                    ErrorConstants.MAX_RECURRING_INSTRUCTED_AMOUNT);
                         }
                     } else {
                         log.error(ErrorConstants.MISSING_RECURRING_PAYMENT_AMOUNT);
-                        return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_MISSING,
-                                ErrorConstants.MISSING_RECURRING_PAYMENT_AMOUNT,
-                                ErrorConstants.PATH_RECURRING_PAYMENT_AMOUNT_AMOUNT);
+                        return CommonConsentValidationUtil.getResponse(eventId,false,
+                                ErrorConstants.MISSING_RECURRING_PAYMENT_AMOUNT);
                     }
                 } else {
                     log.error(ErrorConstants.INVALID_RECURRING_PAYMENT_AMOUNT_OBJECT);
-                    return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_INVALID,
-                            ErrorConstants.INVALID_RECURRING_PAYMENT_AMOUNT_OBJECT,
-                            ErrorConstants.PATH_RECURRING_PAYMENT_AMOUNT);
+                    return CommonConsentValidationUtil.getResponse(eventId,false,
+                            ErrorConstants.INVALID_RECURRING_PAYMENT_AMOUNT_OBJECT);
                 }
             }
 
             //Validate FinalPaymentAmount
             String finalPayAmount = null;
-            if (initiation.containsKey(CommonConstants.FINAL_PAYMENT_AMOUNT)) {
+            if (initiation.has(CommonConstants.FINAL_PAYMENT_AMOUNT)) {
                 if ((initiation.get(CommonConstants.FINAL_PAYMENT_AMOUNT) instanceof JSONObject)) {
 
-                    if (finalPaymentObj.containsKey(CommonConstants.AMOUNT)) {
-                        finalPayAmount = finalPaymentObj.getAsString(CommonConstants.AMOUNT);
+                    if (finalPaymentObj.has(CommonConstants.AMOUNT)) {
+                        finalPayAmount = finalPaymentObj.getString(CommonConstants.AMOUNT);
 
                         //Validate Max Instructed Amount
                         if (!(finalPaymentObj.get(CommonConstants.AMOUNT) instanceof String) ||
                                 !validateMaxInstructedAmount(finalPayAmount)) {
 
                             log.error(ErrorConstants.MAX_FINAL_INSTRUCTED_AMOUNT);
-                            return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_INVALID,
-                                    ErrorConstants.MAX_FINAL_INSTRUCTED_AMOUNT,
-                                    ErrorConstants.PATH_RECURRING_PAYMENT_AMOUNT_AMOUNT);
+                            return CommonConsentValidationUtil.getResponse(eventId,false,
+                                    ErrorConstants.MAX_FINAL_INSTRUCTED_AMOUNT);
                         }
                     } else {
                         log.error(ErrorConstants.MISSING_FINAL_PAYMENT_AMOUNT);
-                        return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_MISSING,
-                                ErrorConstants.MISSING_FINAL_PAYMENT_AMOUNT,
-                                ErrorConstants.PATH_FINAL_PAYMENT_AMOUNT_AMOUNT);
+                        return CommonConsentValidationUtil.getResponse(eventId,false,
+                                ErrorConstants.MISSING_FINAL_PAYMENT_AMOUNT);
                     }
                 } else {
                     log.error(ErrorConstants.INVALID_FINAL_PAYMENT_AMOUNT_OBJECT);
-                    return CommonConsentValidationUtil.getValidationResponse(ErrorConstants.FIELD_INVALID,
-                            ErrorConstants.INVALID_FINAL_PAYMENT_AMOUNT_OBJECT,
-                            ErrorConstants.PATH_RECURRING_PAYMENT_AMOUNT);
+                    return CommonConsentValidationUtil.getResponse(eventId,false,
+                            ErrorConstants.INVALID_FINAL_PAYMENT_AMOUNT_OBJECT);
                 }
             }
         }
-
-        validationResponse.put(CommonConstants.IS_VALID, true);
-        return validationResponse;
+        return CommonConsentValidationUtil.getResponse(eventId,true, CommonConstants.IS_VALID);
     }
 }

@@ -18,13 +18,13 @@
 
 package org.wso2.financial.services.uk.consent.endpoints.utils;
 
-import net.minidev.json.JSONArray;
-import net.minidev.json.JSONObject;
-import net.minidev.json.parser.JSONParser;
-import net.minidev.json.parser.ParseException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.json.JSONObject;
+import org.wso2.financial.services.uk.consent.endpoints.model.RequestBody;
+import org.wso2.financial.services.uk.consent.endpoints.model.SuccessResponse;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -36,20 +36,48 @@ public class CommonConsentValidationUtil {
     private static final Log log = LogFactory.getLog(CommonConsentValidationUtil.class);
 
     /**
-     * Method to construct the consent manage validation response.
+     * Method to construct the consent manage error response.
      *
-     * @param errorCode    Error Code
      * @param errorMessage Error Message
-     * @param errorPath    Error Path
      * @return
      */
-    public static JSONObject getValidationResponse(String errorCode, String errorMessage, String errorPath) {
-        JSONObject validationResponse = new JSONObject();
+    public static ErrorResponse getErrorResponse(String errorMessage) {
 
-        validationResponse.put(CommonConstants.ERRORS, ErrorUtil
-                .constructUKError(ErrorConstants.BAD_REQUEST_CODE, ErrorConstants.INVALID_REQ_PAYLOAD,
-                        errorCode, errorMessage, errorPath));
-        return validationResponse;
+        ErrorResponse errorResponse = new ErrorResponse();
+        errorResponse.actionStatus(ErrorResponse.ActionStatusEnum.ERROR);
+        errorResponse.setErrorMessage(errorMessage);
+        errorResponse.setErrorDescription(errorMessage);
+
+        return errorResponse;
+    }
+
+    /**
+     * Method to construct the consent manage success response.
+     * @param requestBody
+     * @return
+     */
+    public static SuccessResponse getSuccessResponse(String eventId) {
+
+        SuccessResponse successResponse = new SuccessResponse();
+        successResponse.setEventId(eventId);
+        successResponse.actionStatus(SuccessResponse.ActionStatusEnum.SUCCESS);
+        successResponse.setOperations(successResponse.getOperations());
+
+        return successResponse;
+    }
+
+    /**
+     * Method to construct the consent manage success response.
+     * @param isSuccess
+     * @param message
+     * @return
+     */
+    public static Object getResponse(String evenId, boolean isSuccess, String message) {
+        if (isSuccess) {
+            return getSuccessResponse(evenId);
+        } else {
+            return getErrorResponse(message);
+        }
     }
 
     /**
@@ -63,34 +91,6 @@ public class CommonConsentValidationUtil {
             return true;
         } catch (DateTimeParseException e) {
             return false;
-        }
-    }
-
-    /**
-     * Util method to extract the payload from a HTTP request object. Can be JSONObject or JSONArray
-     *
-     * @param request The HTTP request object
-     * @return Object payload can be either an instance of JSONObject or JSONArray only. Can be a ConsentException if
-     * is and error scenario. Error is returned instead of throwing since the error response should be handled by the
-     * toolkit is the manage scenario.
-     */
-    public static JSONObject getPayload(HttpServletRequest request) {
-        try {
-            Object payload = new JSONParser(JSONParser.MODE_PERMISSIVE).parse(getStringPayload(request));
-            if (payload == null) {
-                log.debug("Payload is empty. Returning null");
-                return null;
-            }
-            if (!(payload instanceof JSONObject || payload instanceof JSONArray)) {
-                //Not throwing error since error should be formatted by manage toolkit
-                log.error("Payload is not a JSON. Returning null");
-                return null;
-            }
-            return (JSONObject) payload;
-        } catch (ParseException e) {
-            //Not throwing error since error should be formatted by manage toolkit
-            log.error(ErrorConstants.ERROR_PAYLOAD_PARSE + ". Returning null", e);
-            return null;
         }
     }
 
@@ -109,6 +109,21 @@ public class CommonConsentValidationUtil {
             log.error("Error reading payload", e);
             return null;
         }
+    }
+
+    /**
+     * Convert an object to a JSON object
+     * @param object
+     * @return
+     * @throws Exception
+     */
+    public static JSONObject convertObjectToJson(Object object) throws Exception {
+        // Convert Object to JSON string
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonString = objectMapper.writeValueAsString(object);
+
+        // Parse JSON string to JSONObject
+        return new JSONObject(jsonString);
     }
 
 }
