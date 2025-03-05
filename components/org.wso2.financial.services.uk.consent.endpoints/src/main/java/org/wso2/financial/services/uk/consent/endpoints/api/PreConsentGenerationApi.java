@@ -66,7 +66,7 @@ public class PreConsentGenerationApi {
     public Response preConsentGenerationPost(@Context HttpServletRequest request, @Valid @NotNull RequestBody requestBody) throws Exception {
 
         // Read the request body
-        Object consentReceipt = requestBody.getEvent().getRequest().getConsentReceipt();
+        Object consentReceipt = requestBody.getEvent().getRequest().getPayload();
 
         String requestPath = request.getRequestURI();
         Object validationResponse = null;
@@ -90,7 +90,7 @@ public class PreConsentGenerationApi {
         }
 
         // Check if validationResponse contains an error message
-        if (validationResponse != null && validationResponse.toString().contains("errors")) {
+        if (validationResponse != null && validationResponse.toString().contains("error")) {
             return Response.status(Response.Status.BAD_REQUEST).entity(validationResponse).build();
         }
 

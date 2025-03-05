@@ -95,23 +95,6 @@ public class CommonConsentValidationUtil {
     }
 
     /**
-     * Extract string payload from request object
-     *
-     * @param request The request object
-     * @return String payload
-     */
-    public static String getStringPayload(HttpServletRequest request) {
-        try {
-            // Read the input stream and return the string payload
-            return IOUtils.toString(request.getInputStream(), "UTF-8");
-        } catch (IOException e) {
-            // Log the error message and return a default message or null
-            log.error("Error reading payload", e);
-            return null;
-        }
-    }
-
-    /**
      * Convert an object to a JSON object
      * @param object
      * @return

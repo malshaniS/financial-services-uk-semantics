@@ -14,7 +14,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 @JsonTypeName("Request")
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaJAXRSSpecServerCodegen", date = "2025-03-01T12:33:30.949099+05:30[Asia/Colombo]", comments = "Generator version: 7.11.0")
 public class Request   {
-  private Object consentReceipt;
+  private Object payload;
   private @Valid List<Object> additionalHeaders = new ArrayList<>();
   private @Valid List<Object> additionalParams = new ArrayList<>();
 
@@ -24,21 +24,21 @@ public class Request   {
   /**
    * The receipt used by Third parties which includes detailed information on data access request
    **/
-  public Request consentReceipt(Object consentReceipt) {
-    this.consentReceipt = consentReceipt;
+  public Request consentReceipt(Object payload) {
+    this.payload = payload;
     return this;
   }
 
   
   @ApiModelProperty(value = "The receipt used by Third parties which includes detailed information on data access request")
-  @JsonProperty("consent_receipt")
-  public Object getConsentReceipt() {
-    return consentReceipt;
+  @JsonProperty("payload")
+  public Object getPayload() {
+    return payload;
   }
 
-  @JsonProperty("consent_receipt")
-  public void setConsentReceipt(Object consentReceipt) {
-    this.consentReceipt = consentReceipt;
+  @JsonProperty("payload")
+  public void setPayload(Object payload) {
+    this.payload = payload;
   }
 
   /**
@@ -123,14 +123,14 @@ public class Request   {
       return false;
     }
     Request request = (Request) o;
-    return Objects.equals(this.consentReceipt, request.consentReceipt) &&
+    return Objects.equals(this.payload, request.payload) &&
         Objects.equals(this.additionalHeaders, request.additionalHeaders) &&
         Objects.equals(this.additionalParams, request.additionalParams);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(consentReceipt, additionalHeaders, additionalParams);
+    return Objects.hash(payload, additionalHeaders, additionalParams);
   }
 
   @Override
@@ -138,7 +138,7 @@ public class Request   {
     StringBuilder sb = new StringBuilder();
     sb.append("class Request {\n");
     
-    sb.append("    consentReceipt: ").append(toIndentedString(consentReceipt)).append("\n");
+    sb.append("    consentReceipt: ").append(toIndentedString(payload)).append("\n");
     sb.append("    additionalHeaders: ").append(toIndentedString(additionalHeaders)).append("\n");
     sb.append("    additionalParams: ").append(toIndentedString(additionalParams)).append("\n");
     sb.append("}");
